@@ -6,6 +6,7 @@ import os
 
 destination = "./datasets/segmentations"
 
+
 def convertAndSave(filepath, filename):
     f = open(filepath, 'r')
     w, h = (0, 0)
@@ -22,10 +23,10 @@ def convertAndSave(filepath, filename):
         s, r, c1, c2 = map(lambda x: int(x), line.split(' '))
         seg[r, c1:c2] = s
 
-    #filename = filename + ".png"
+    # filename = filename + ".png"
     path = os.path.join(destination, filename)
     np.save(path, seg)
-    #matplotlib.image.imsave(path, seg) # Saves but pixels values in [0.1]
+    # matplotlib.image.imsave(path, seg) # Saves but pixels values in [0.1]
 
 
 path = "./datasets/human/color/"

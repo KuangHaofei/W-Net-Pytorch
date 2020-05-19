@@ -23,8 +23,9 @@ from model import WNet
 from autoencoder_dataset import AutoencoderDataset
 from soft_n_cut_loss import soft_n_cut_loss
 
+
 def main():
-    print("PyTorch Version: ",torch.__version__)
+    print("PyTorch Version: ", torch.__version__)
     if torch.cuda.is_available():
         print("Cuda is available. Using GPU")
 
@@ -34,13 +35,13 @@ def main():
     # Image loading and preprocessing #
     ###################################
 
-    #TODO: Maybe we should crop a large square, then resize that down to our patch size?
+    # TODO: Maybe we should crop a large square, then resize that down to our patch size?
     # For now, data augmentation must not introduce any missing pixels TODO: Add data augmentation noise
     train_xform = transforms.Compose([
         transforms.RandomCrop(224),
         transforms.Resize(128),
-        transforms.RandomCrop(config.input_size+config.variationalTranslation), # For now, cropping down to 224
-        transforms.RandomHorizontalFlip(), # TODO: Add colorjitter, random erasing
+        transforms.RandomCrop(config.input_size + config.variationalTranslation),  # For now, cropping down to 224
+        transforms.RandomHorizontalFlip(),  # TODO: Add colorjitter, random erasing
         transforms.ToTensor()
     ])
     val_xform = transforms.Compose([
@@ -50,12 +51,13 @@ def main():
         transforms.ToTensor()
     ])
 
-    #TODO: Load validation segmentation maps too  (for evaluation purposes)
+    # TODO: Load validation segmentation maps too  (for evaluation purposes)
     train_dataset = AutoencoderDataset("train", train_xform)
-    val_dataset   = AutoencoderDataset("val", val_xform)
+    val_dataset = AutoencoderDataset("val", val_xform)
 
-    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=config.batch_size, num_workers=4, shuffle=True)
-    val_dataloader   = torch.utils.data.DataLoader(val_dataset,   batch_size=4, num_workers=4, shuffle=False)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=config.batch_size, num_workers=4,
+                                                   shuffle=True)
+    val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=4, num_workers=4, shuffle=False)
 
     util.clear_progress_dir()
 
@@ -74,16 +76,13 @@ def main():
     # Use the current time to save the model at end of each epoch
     modelName = str(datetime.now())
 
-
-
     ###################################
     #          Loss Criterion         #
     ###################################
 
     def reconstruction_loss(x, x_prime):
-    	binary_cross_entropy = F.binary_cross_entropy(x_prime, x, reduction='sum')
-    	return binary_cross_entropy
-
+        binary_cross_entropy = F.binary_cross_entropy(x_prime, x, reduction='sum')
+        return binary_cross_entropy
 
     ###################################
     #          Training Loop          #
@@ -105,40 +104,39 @@ def main():
                 plt.show()
 
             if torch.cuda.is_available():
-                inputs  = inputs.cuda()
+                inputs = inputs.cuda()
                 outputs = outputs.cuda()
 
             optimizer.zero_grad()
 
             segmentations, reconstructions = autoencoder(inputs)
 
-            l_soft_n_cut     = soft_n_cut_loss(inputs, segmentations)
+            l_soft_n_cut = soft_n_cut_loss(inputs, segmentations)
             l_reconstruction = reconstruction_loss(
                 inputs if config.variationalTranslation == 0 else outputs,
                 reconstructions
             )
 
             loss = (l_reconstruction + l_soft_n_cut)
-            loss.backward(retain_graph=False) # We only need to do retain graph =true if we're backpropping from multiple heads
+            loss.backward(
+                retain_graph=False)  # We only need to do retain graph =true if we're backpropping from multiple heads
             optimizer.step()
 
-            if config.debug and (i%50) == 0:
+            if config.debug and (i % 50) == 0:
                 print(i)
 
             # print statistics
             running_loss += loss.item()
 
-
-            if config.showSegmentationProgress and i == 0: # If first batch in epoch
+            if config.showSegmentationProgress and i == 0:  # If first batch in epoch
                 util.save_progress_image(autoencoder, progress_images, epoch)
-                optimizer.zero_grad() # Don't change gradient on validation
+                optimizer.zero_grad()  # Don't change gradient on validation
 
         epoch_loss = running_loss / len(train_dataloader.dataset)
         print(f"Epoch {epoch} loss: {epoch_loss:.6f}")
 
         if config.saveModel:
             util.save_model(autoencoder, modelName)
-
 
 
 if __name__ == "__main__":

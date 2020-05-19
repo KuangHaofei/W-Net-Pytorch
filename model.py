@@ -18,6 +18,7 @@ We halve the number of feature channels at each upsampling step
 
 '''
 
+
 # NOTE: batch norm is up for debate
 # We want batch norm if possible, but the batch size is too low to benefit
 # So instead we do instancenorm
@@ -33,8 +34,8 @@ class ConvModule(nn.Module):
         super(ConvModule, self).__init__()
 
         layers = [
-            nn.Conv2d(input_dim, output_dim, 1), # Pointwise (1x1) through all channels
-            nn.Conv2d(output_dim, output_dim, 3, padding=1, groups=output_dim), # Depthwise (3x3) through each channel
+            nn.Conv2d(input_dim, output_dim, 1),  # Pointwise (1x1) through all channels
+            nn.Conv2d(output_dim, output_dim, 3, padding=1, groups=output_dim),  # Depthwise (3x3) through each channel
             nn.InstanceNorm2d(output_dim),
             nn.BatchNorm2d(output_dim),
             nn.ReLU(),
@@ -59,9 +60,10 @@ class ConvModule(nn.Module):
     def forward(self, x):
         return self.module(x)
 
-class BaseNet(nn.Module): # 1 U-net
+
+class BaseNet(nn.Module):  # 1 U-net
     def __init__(self, input_channels=3,
-    encoder=[64, 128, 256, 512], decoder=[1024, 512, 256], output_channels=config.k):
+                 encoder=[64, 128, 256, 512], decoder=[1024, 512, 256], output_channels=config.k):
         super(BaseNet, self).__init__()
 
         layers = [
@@ -87,21 +89,20 @@ class BaseNet(nn.Module): # 1 U-net
 
         self.first_module = nn.Sequential(*layers)
 
-
         self.pool = nn.MaxPool2d(2, 2)
         self.enc_modules = nn.ModuleList(
-            [ConvModule(channels, 2*channels) for channels in encoder])
+            [ConvModule(channels, 2 * channels) for channels in encoder])
 
-
-        decoder_out_sizes = [int(x/2) for x in decoder]
+        decoder_out_sizes = [int(x / 2) for x in decoder]
         self.dec_transpose_layers = nn.ModuleList(
-            [nn.ConvTranspose2d(channels, channels, 2, stride=2) for channels in decoder]) # Stride of 2 makes it right size
+            [nn.ConvTranspose2d(channels, channels, 2, stride=2) for channels in
+             decoder])  # Stride of 2 makes it right size
         self.dec_modules = nn.ModuleList(
-            [ConvModule(3*channels_out, channels_out) for channels_out in decoder_out_sizes])
+            [ConvModule(3 * channels_out, channels_out) for channels_out in decoder_out_sizes])
         self.last_dec_transpose_layer = nn.ConvTranspose2d(128, 128, 2, stride=2)
 
         layers = [
-            nn.Conv2d(128+64, 64, 3, padding=1),
+            nn.Conv2d(128 + 64, 64, 3, padding=1),
             nn.InstanceNorm2d(64),
             nn.BatchNorm2d(64),
             nn.ReLU(),
@@ -113,7 +114,7 @@ class BaseNet(nn.Module): # 1 U-net
             nn.ReLU(),
             nn.Dropout(config.drop),
 
-            nn.Conv2d(64, output_channels, 1), # No padding on pointwise
+            nn.Conv2d(64, output_channels, 1),  # No padding on pointwise
             nn.ReLU(),
         ]
 
@@ -125,7 +126,6 @@ class BaseNet(nn.Module): # 1 U-net
             layers = [layer for layer in layers if not isinstance(layer, nn.Dropout)]
 
         self.last_module = nn.Sequential(*layers)
-
 
     def forward(self, x):
         x1 = self.first_module(x)
@@ -152,10 +152,10 @@ class WNet(nn.Module):
         super(WNet, self).__init__()
 
         self.U_encoder = BaseNet(input_channels=3, encoder=config.encoderLayerSizes,
-                                    decoder=config.decoderLayerSizes, output_channels=config.k)
+                                 decoder=config.decoderLayerSizes, output_channels=config.k)
         self.softmax = nn.Softmax2d()
         self.U_decoder = BaseNet(input_channels=config.k, encoder=config.encoderLayerSizes,
-                                    decoder=config.decoderLayerSizes, output_channels=3)
+                                 decoder=config.decoderLayerSizes, output_channels=3)
         self.sigmoid = nn.Sigmoid()
 
     def forward_encoder(self, x):
@@ -168,7 +168,7 @@ class WNet(nn.Module):
         reconstructions = self.sigmoid(x18)
         return reconstructions
 
-    def forward(self, x): # x is (3 channels 224x224)
+    def forward(self, x):  # x is (3 channels 224x224)
         segmentations = self.forward_encoder(x)
-        x_prime       = self.forward_decoder(segmentations)
+        x_prime = self.forward_decoder(segmentations)
         return segmentations, x_prime

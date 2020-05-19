@@ -15,8 +15,9 @@ file_ext = ".jpg"
 
 randomCrop = transforms.RandomCrop(config.input_size)
 centerCrop = transforms.CenterCrop(config.input_size)
-toTensor   = transforms.ToTensor()
-toPIL      = transforms.ToPILImage()
+toTensor = transforms.ToTensor()
+toPIL = transforms.ToPILImage()
+
 
 # Assumes given data directory (train, val, etc) has a directory called "images"
 # Loads image as both inputs and outputs
@@ -24,7 +25,7 @@ toPIL      = transforms.ToPILImage()
 class AutoencoderDataset(Dataset):
     def __init__(self, mode, input_transforms):
         self.mode = mode
-        self.data_path  = os.path.join(config.data_dir, mode)
+        self.data_path = os.path.join(config.data_dir, mode)
         self.images_dir = os.path.join(self.data_path, 'images')
         self.image_list = self.get_image_list()
         self.transforms = input_transforms
@@ -56,7 +57,7 @@ class AutoencoderDataset(Dataset):
         return image_list
 
     def load_pil_image(self, path):
-    # open path as file to avoid ResourceWarning
+        # open path as file to avoid ResourceWarning
         with open(path, 'rb') as f:
             img = Image.open(f)
             return img.convert('RGB')
