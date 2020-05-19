@@ -34,7 +34,7 @@ def soft_n_cut_loss(inputs, segmentations):
 
 
 def soft_n_cut_loss_(flatten_image, prob, k, rows, cols):
-    '''
+    """
     Inputs:
     prob : (rows*cols*k) tensor
     k : number of classes (integer)
@@ -43,7 +43,7 @@ def soft_n_cut_loss_(flatten_image, prob, k, rows, cols):
     cols : number of the cols in the original image
     Output :
     soft_n_cut_loss tensor for a single image
-    '''
+    """
 
     soft_n_cut_loss = k
     weights = edge_weights(flatten_image, rows, cols)
