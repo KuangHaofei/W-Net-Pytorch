@@ -3,9 +3,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 import os
+import sys
 
-destination = "./datasets/segmentations"
+train_destination = "/home/ubuntu/workspace/W-Net-Pytorch/datasets/BSDS300/train/segmentations"
+test_destination = "/home/ubuntu/workspace/W-Net-Pytorch/datasets/BSDS300/test/segmentations"
 
+iid_train = np.loadtxt("/home/ubuntu/workspace/W-Net-Pytorch/datasets/BSDS300/iids_train.txt").astype(np.int)
+iid_test = np.loadtxt("/home/ubuntu/workspace/W-Net-Pytorch/datasets/BSDS300/iids_test.txt").astype(np.int)
+
+iid_train = iid_train.tolist()
+iid_test = iid_test.tolist()
 
 def convertAndSave(filepath, filename):
     f = open(filepath, 'r')
@@ -24,12 +31,20 @@ def convertAndSave(filepath, filename):
         seg[r, c1:c2] = s
 
     # filename = filename + ".png"
-    path = os.path.join(destination, filename)
+    path = None
+
+    if int(filename[:-4]) in iid_train:
+        path = os.path.join(train_destination, filename)
+    elif int(filename[:-4]) in iid_test:
+        path = os.path.join(test_destination, filename)
+    else:
+        print("filename is incorrect!")
+
     np.save(path, seg)
     # matplotlib.image.imsave(path, seg) # Saves but pixels values in [0.1]
 
 
-path = "./datasets/human/color/"
+path = "/home/ubuntu/workspace/W-Net-Pytorch/datasets/BSDS300/human/color/"
 dirs = list()
 for dir, _, files in os.walk(path):
     for filename in files:
