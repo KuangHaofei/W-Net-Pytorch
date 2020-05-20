@@ -27,7 +27,7 @@ def enumerate_params(models):
 
 
 def save_model(autoencoder, modelName):
-    path = os.path.join("./models/", modelName.replace(":", " ").replace(".", " ").replace(" ", "_"))
+    path = os.path.join("/home/ubuntu/workspace/W-Net-Pytorch/models/", modelName.replace(":", " ").replace(".", " ").replace(" ", "_"))
     torch.save(autoencoder, path)
     with open(path + ".config", "a+") as f:
         f.write(str(config))

@@ -53,7 +53,7 @@ def main():
 
     # TODO: Load validation segmentation maps too  (for evaluation purposes)
     train_dataset = AutoencoderDataset("train", train_xform)
-    val_dataset = AutoencoderDataset("val", val_xform)
+    val_dataset = AutoencoderDataset("test", val_xform)
 
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=config.batch_size, num_workers=4,
                                                    shuffle=True)

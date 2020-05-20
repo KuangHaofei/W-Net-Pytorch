@@ -21,6 +21,9 @@ from config import Config
 import util
 from model import WNet
 from evaluation_dataset import EvaluationDataset
+from metrics import Results
+
+import sys
 
 
 def main():
@@ -45,7 +48,7 @@ def main():
 
     # We will only use .forward_encoder()
     if torch.cuda.is_available():
-        autoencoder = torch.load("./models/model")
+        autoencoder = torch.load("/home/ubuntu/workspace/W-Net-Pytorch/models/2020-05-19_09_19_43_597783")
     else:
         autoencoder = torch.load("./models/model", map_location=torch.device('cpu'))
     util.enumerate_params([autoencoder])
@@ -55,6 +58,10 @@ def main():
     ###################################
 
     autoencoder.eval()
+
+    # record error metrics
+    results = Results()
+    results.initialization()
 
     def combine_patches(image, patches):
         w, h = image[0].shape
@@ -135,6 +142,10 @@ def main():
         prediction = predicted_segmentation.int()
         actual = target_segmentation[0].int()
 
+        pred = prediction.cpu().numpy().astype('int')
+        mask = actual.cpu().numpy().astype(np.int)
+        results.update(pred, mask)
+
         pixel_count = count_predicted_pixels(prediction, actual)
         prediction = convert_prediction(pixel_count, prediction)
 
@@ -163,6 +174,13 @@ def main():
 
     print(f"Average performance on n={n} validation images:")
     print(f"mean IoU: {iou_sum / n}   | mean pixel accuracy: {pixel_accuracy_sum / n}")
+
+    meanSC, meanPRI, meanVI = results.get_results()
+
+    print('mean SC is: %.4f ' % meanSC)
+    print('mean PRI is: %.4f ' % meanPRI)
+    print('mean VI is: %.4f ' % meanVI)
+    print("=================================")
 
 
 if __name__ == "__main__":
