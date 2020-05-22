@@ -21,6 +21,7 @@ from config import Config
 import util
 from model import WNet
 from evaluation_dataset import EvaluationDataset
+from dataloader.bsd_dataloader import BSDS500
 from metrics import Results
 
 import sys

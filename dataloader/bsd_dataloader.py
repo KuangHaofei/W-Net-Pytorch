@@ -13,7 +13,7 @@ import torch
 from torch.utils import data
 import torchvision.transforms as standard_transforms
 
-from ..config import Config
+from config import Config
 
 config = Config()
 
@@ -25,21 +25,34 @@ toPIL = standard_transforms.ToPILImage()
 
 class BSDS500(data.Dataset):
     def __init__(self, root='/home/ubuntu/workspace/us-seg-lib/data/BSR/BSDS500/data',
-                 split='train', mode='train'):
+                 split='train', mode='train', input_transforms=None):
         self.root = root
         self.split = split
         self.mode = mode
 
         self.img_paths, self.mask_paths = _get_bsd_pairs(self.root, self.split)
+        self.transforms = input_transforms
 
     def __getitem__(self, index):
         img_path, mask_path = self.img_paths[index], self.mask_paths[index]
         raw_img = Image.open(img_path).convert('RGB')
-
         _, mean_mask = _loadmask(mask_path)
         mean_mask = Image.fromarray(mean_mask.astype(np.float))
 
-        return toTensor(raw_img), toTensor(mean_mask)
+        input = self.transforms(raw_img)
+        input = toPIL(input)
+        output = input.copy()
+        if self.mode == "train" and config.variationalTranslation > 0:
+            output = randomCrop(input)
+        input = toTensor(centerCrop(input))
+        output = toTensor(output)
+
+        mask = toTensor(mean_mask)
+
+        if self.mode == 'test':
+            input = toTensor(raw_img)
+
+        return input, output, mask
 
     def __len__(self):
         return len(self.img_paths)

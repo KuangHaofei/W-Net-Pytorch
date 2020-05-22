@@ -2,7 +2,7 @@ class Config():
     def __init__(self):
         self.debug = True
         self.input_size = 96  # Side length of square image patch
-        self.batch_size = 1  # Batch size of patches Note: 11 gig gpu will max batch of 5
+        self.batch_size = 16  # Batch size of patches Note: 11 gig gpu will max batch of 5
         self.val_batch_size = 4  # Number of images shown in progress
         self.test_batch_size = 1  # We only use the first part of the model here (forward_encoder), so it can be larger
         self.verbose_testing = False

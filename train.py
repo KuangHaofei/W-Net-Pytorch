@@ -24,6 +24,7 @@ from autoencoder_dataset import AutoencoderDataset
 from soft_n_cut_loss import soft_n_cut_loss
 
 from dataloader.pascal_dataloader import PascalVOC
+from dataloader.bsd_dataloader import BSDS500
 
 
 def main():
@@ -40,14 +41,14 @@ def main():
     # TODO: Maybe we should crop a large square, then resize that down to our patch size?
     # For now, data augmentation must not introduce any missing pixels TODO: Add data augmentation noise
     train_xform = transforms.Compose([
-        transforms.RandomCrop(224),
+        transforms.RandomCrop(128),
         transforms.Resize(128),
         transforms.RandomCrop(config.input_size + config.variationalTranslation),  # For now, cropping down to 224
         transforms.RandomHorizontalFlip(),  # TODO: Add colorjitter, random erasing
         transforms.ToTensor()
     ])
     val_xform = transforms.Compose([
-        transforms.CenterCrop(224),
+        transforms.CenterCrop(128),
         transforms.Resize(128),
         transforms.CenterCrop(config.input_size),
         transforms.ToTensor()
@@ -58,7 +59,7 @@ def main():
     # val_dataset = AutoencoderDataset("test", val_xform)
 
     train_dataset = PascalVOC(split='train', mode='train', input_transforms=train_xform)
-    val_dataset = PascalVOC(split='val', mode='val', input_transforms=val_xform)
+    val_dataset = BSDS500(split='val', mode='val', input_transforms=val_xform)
 
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=config.batch_size, num_workers=4,
                                                    shuffle=True)
@@ -95,9 +96,10 @@ def main():
 
     autoencoder.train()
 
-    progress_images, progress_expected = next(iter(val_dataloader))
+    progress_images, progress_expected, _ = next(iter(val_dataloader))
 
     for epoch in range(config.num_epochs):
+        print('epochs: ', epoch)
         running_loss = 0.0
         for i, [inputs, outputs] in enumerate(train_dataloader, 0):
 

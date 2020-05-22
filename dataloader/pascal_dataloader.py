@@ -41,25 +41,18 @@ class PascalVOC(data.Dataset):
         self.transforms = input_transforms
 
     def __getitem__(self, index):
-        img_path, mask_path = self.img_paths[index], self.mask_paths[index]
-        img, mask = Image.open(img_path).convert('RGB'), Image.open(mask_path)
+        img_path = self.img_paths[index]
+        input = Image.open(img_path).convert('RGB')
 
-        input = img
-        output = None
-        if self.mode == 'train':
-            input = self.transforms(input)
-            input = toPIL(input)
-            output = input.copy()
-            if self.mode == "train" and config.variationalTranslation > 0:
-                output = randomCrop(input)
-            input = toTensor(centerCrop(input))
-            output = toTensor(output)
+        input = self.transforms(input)
+        input = toPIL(input)
+        output = input.copy()
+        if self.mode == "train" and config.variationalTranslation > 0:
+            output = randomCrop(input)
+        input = toTensor(centerCrop(input))
+        output = toTensor(output)
 
-        elif self.mode == 'val':
-            input = toTensor(img)
-            mask = toTensor(mask)
-
-        return input, output, mask
+        return input, output
 
     def __len__(self):
         return len(self.img_paths)
