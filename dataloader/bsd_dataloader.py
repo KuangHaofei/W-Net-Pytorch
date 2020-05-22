@@ -25,47 +25,21 @@ toPIL = standard_transforms.ToPILImage()
 
 class BSDS500(data.Dataset):
     def __init__(self, root='/home/ubuntu/workspace/us-seg-lib/data/BSR/BSDS500/data',
-                 split='train', mode='train', base_size=224, transforms=None):
+                 split='train', mode='train'):
         self.root = root
         self.split = split
         self.mode = mode
 
         self.img_paths, self.mask_paths = _get_bsd_pairs(self.root, self.split)
 
-        self.base_size = base_size
-
-        # Geometric image transformations
-        self.transforms = None
-        if transforms is not None:
-            self.transforms = transforms
-
-        # mask transformations
-        self.target_transform = transforms.Compose([
-            transforms.Resize(config.input_size),
-            transforms.ToTensor()
-        ])
-
     def __getitem__(self, index):
         img_path, mask_path = self.img_paths[index], self.mask_paths[index]
         raw_img = Image.open(img_path).convert('RGB')
 
-        raw_masks, mean_mask = _loadmask(mask_path)
-        gt_masks = []
+        _, mean_mask = _loadmask(mask_path)
         mean_mask = Image.fromarray(mean_mask.astype(np.float))
 
-        input = self.transforms(raw_img)
-
-        input = standard_transforms.ToPILImage(input)
-        output = input.copy()
-
-        if self.mode == "train" and config.variationalTranslation > 0:
-            output = randomCrop(input)
-        input = toTensor(centerCrop(input))
-        output = toTensor(output)
-
-        mask = self.target_transform(mean_mask)
-
-        return input, output
+        return toTensor(raw_img), toTensor(mean_mask)
 
     def __len__(self):
         return len(self.img_paths)

@@ -24,7 +24,7 @@ class Config():
         self.decoderLayerSizes = [512, 256]
 
         self.showSegmentationProgress = True
-        self.segmentationProgressDir = './latent_images/'
+        self.segmentationProgressDir = './latent_images/pascal/'
 
         self.variationalTranslation = 0  # Pixels, 0 for off. 1 works fine
 

@@ -23,6 +23,8 @@ from model import WNet
 from autoencoder_dataset import AutoencoderDataset
 from soft_n_cut_loss import soft_n_cut_loss
 
+from dataloader.pascal_dataloader import PascalVOC
+
 
 def main():
     print("PyTorch Version: ", torch.__version__)
@@ -52,8 +54,11 @@ def main():
     ])
 
     # TODO: Load validation segmentation maps too  (for evaluation purposes)
-    train_dataset = AutoencoderDataset("train", train_xform)
-    val_dataset = AutoencoderDataset("test", val_xform)
+    # train_dataset = AutoencoderDataset("train", train_xform)
+    # val_dataset = AutoencoderDataset("test", val_xform)
+
+    train_dataset = PascalVOC(split='train', mode='train', input_transforms=train_xform)
+    val_dataset = PascalVOC(split='val', mode='val', input_transforms=val_xform)
 
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=config.batch_size, num_workers=4,
                                                    shuffle=True)
